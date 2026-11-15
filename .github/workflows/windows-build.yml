@@ -5,8 +5,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  # Fix fuer "path too long": Cargo holt Git-Abhaengigkeiten (ruv-FANN)
-  # ueber das git-Programm statt libgit2, damit core.longpaths greift.
   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
 jobs:
@@ -39,11 +37,18 @@ jobs:
       # Tauri CLI per npx statt "cargo install" (spart ca. 10 Minuten)
       - name: Build Tauri app
         working-directory: v2/crates/wifi-densepose-desktop
+        # Fix fuer "path too long": kurzer Cargo-Cache-Pfad (C:\c statt
+        # C:\Users\runneradmin\.cargo), damit die Dateien aus ruv-FANN
+        # unter dem Windows-Limit von 260 Zeichen bleiben.
+        env:
+          CARGO_HOME: C:\c
         run: npx --yes @tauri-apps/cli@^2 build
 
       - name: Build sensing server
         working-directory: v2
         continue-on-error: true
+        env:
+          CARGO_HOME: C:\c
         run: cargo build --release -p wifi-densepose-sensing-server
 
       - name: Package portable ZIP
